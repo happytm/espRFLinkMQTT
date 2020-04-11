@@ -159,4 +159,14 @@ const char* const user_cmds[][2] = {			// These are predefined user commands to 
 };
 
 
+//********************************************************************************
+// RFLink Wifi board
+// https://www.nodo-shop.nl/en/home/191-rflink-wifi-koppelprint.html
+//********************************************************************************
+
+  #define DEFAULT_PIN_I2C_SDA              4
+  #define DEFAULT_PIN_I2C_SCL              5
+  #define DEFAULT_I2C_CLOCK_SPEED          400000
+  #define DEFAULT_WD_IC2_ADDRESS           38
+  
 #endif

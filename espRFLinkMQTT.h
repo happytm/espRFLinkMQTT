@@ -8,6 +8,8 @@
 
 #include "Rflink.h"
 
+#include <Wire.h> // RFLInk WiFi board
+
 #define CFG_SSID_SIZE 				32
 #define CFG_PSK_SIZE  				64
 #define CFG_HOSTNAME_SIZE 			32
@@ -86,6 +88,8 @@ long lastReceived = now;									// store last received data time from RFLink
 
 #define UPTIME_INTERVAL 300000L								// publish uptime every 5 min
 long lastUptime = - UPTIME_INTERVAL;						// timer to publish uptime on MQTT server ; negative value forces update at startup
+
+long lastSecond = -1000;
 
 const long resetMegaInterval = MEGA_AUTO_RESET_INTERVAL; 	// auto reset Mega if no data is received during more than x min - 0 to disable
 int resetMegaCounter = 0;									// number of times Mega is reset

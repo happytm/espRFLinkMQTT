@@ -1095,6 +1095,58 @@ uint16_t crc16_ccitt(unsigned char* data, unsigned int data_len) {
 	return crc;
 }
 
+/**
+ * RFLInk WiFi board
+ */
+ 
+void rflink_wifi_init()	{
+
+  // configure hardware pins 
+  if (DEFAULT_PIN_I2C_SDA != -1)
+  {
+    DEBUG_PRINTLN("INIT : I2C");
+    Wire.setClock(DEFAULT_I2C_CLOCK_SPEED);
+	Wire.begin(DEFAULT_PIN_I2C_SDA, DEFAULT_PIN_I2C_SCL);
+
+  }
+
+  // I2C Watchdog boot status check
+  if (DEFAULT_WD_IC2_ADDRESS != 0)
+  {
+    delay(500);
+    Wire.beginTransmission(DEFAULT_WD_IC2_ADDRESS);
+    Wire.write(0x83); // command to set pointer
+    Wire.write(17);   // pointer value to status byte
+    Wire.endTransmission();
+
+    Wire.requestFrom((uint8_t)DEFAULT_WD_IC2_ADDRESS, (uint8_t)1);
+
+    if (Wire.available())
+    {
+      byte status = Wire.read();
+
+      if (status & 0x1)
+      {
+        DEBUG_PRINTLN("INIT : Reset by WD!");
+        //lastBootCause = BOOT_CAUSE_EXT_WD;
+      }
+    }
+  }
+}
+
+void rflink_wifi_loop()
+{
+
+  // I2C Watchdog feed
+  if (DEFAULT_WD_IC2_ADDRESS != 0)
+  {
+    Wire.beginTransmission(DEFAULT_WD_IC2_ADDRESS);
+    Wire.write(0xA5);
+    Wire.endTransmission();
+  }
+  
+}
+
 //********************************************************************************
 // Setup
 //********************************************************************************
@@ -1163,6 +1215,8 @@ void setup() {
 	delay(500);
 	rflinkSerialTX.println(F("10;version;"));                     // Ask version to RFLink
 
+	rflink_wifi_init();
+	
 } // setup
 
 //********************************************************************************
@@ -1341,6 +1395,13 @@ void loop() {
 			sprintf(mqtt_publish_payload,"%ld", uptime_min());
 			MQTTClient.publish(MQTT_UPTIME_TOPIC,mqtt_publish_payload,MQTT_RETAIN_FLAG);
 			DEBUG_PRINT("Uptime : ");DEBUG_PRINTLN(time_string_exp(millis()));
+		}
+
+		// Handle RFLink WiFi board
+		if ( (now - lastSecond) > (1000) ) {								// every 1s
+			lastSecond = now;
+			rflink_wifi_loop();
+			DEBUG_PRINTLN("INIT: reset WD loop");
 		}
 
 		// Handle Mega reset if no data is received
